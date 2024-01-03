@@ -1,6 +1,5 @@
-const util = require('util');
-
-const {add, sub} = require('date-fns');
+const add = require('date-fns/add');
+const sub = require('date-fns/sub');
 
 const ops = {
     add,
@@ -72,7 +71,11 @@ module.exports = {
         const newArgs = [string];
 
         values.forEach(function (value) {
-            newArgs.push(util.inspect(value, false, null));
+            if (typeof value === 'object') {
+                newArgs.push(JSON.stringify(value, null, 2));
+            } else {
+                newArgs.push(value);
+            }
         });
 
         console.log.apply(this, newArgs); // eslint-disable-line no-console

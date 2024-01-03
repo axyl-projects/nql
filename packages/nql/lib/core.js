@@ -1,7 +1,13 @@
-const mingo = require('mingo');
 const nql = require('@tryghost/nql-lang');
-const mongoKnex = require('@tryghost/mongo-knex');
+const {Context, OperatorType} = require('mingo/core');
+const mingo = require('mingo/query');
 const utils = require('./utils');
+
+const {$and, $eq, $gt, $gte, $in, $lt, $lte, $ne, $nin, $not, $or, $regex} = require('mingo/operators/query');
+
+const context = new Context({
+    [OperatorType.QUERY]: {$and, $or, $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin, $regex, $not}
+});
 
 module.exports = (queryString, options = {}) => {
     const api = {};
@@ -41,12 +47,18 @@ module.exports = (queryString, options = {}) => {
     // Use Mingo to apply the query to a JSON object
     // @TODO rethink this naming
     api.queryJSON = function (obj) {
-        this.query = this.query || new mingo.Query(api.parse());
+        this.query = this.query || new mingo.Query(api.parse(), {
+            useGlobalContext: false,
+            context
+        });
         return this.query.test(obj);
     };
 
-    // Use MongoKnex to apply the query to a query builder object
-    api.querySQL = qb => mongoKnex(qb, api.parse(), options);
+    // Only implemented on the server
+    api.querySQL = () => {
+        // eslint-disable-next-line no-restricted-syntax
+        throw new Error('querySQL is not implemented in the browser');
+    };
 
     // Get back the original query string
     api.toString = () => queryString;
